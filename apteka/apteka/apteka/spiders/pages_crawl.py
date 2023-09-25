@@ -102,10 +102,10 @@ class PagesCrawlSpider(CrawlSpider):
         yield item
 
     def parse_next_page(self, response):
-        page_links = response.xpath('//ul[@class="ui-pagination"]/li/a/@href').extract()
+        # page_links = response.xpath('//ul[@class="ui-pagination"]/li/a/@href').extract()
 
-        for page_link in page_links:
-            yield scrapy.Request(response.urljoin(page_link), callback=self.parse_item)
+        for i in range(1,20):
+            yield scrapy.Request(response.urljoin(f'https://maksavit.ru/novosibirsk/catalog/materinstvo_i_detstvo/detskaya_gigiena/?page={i}'), callback=self.parse_item)
 
 
 
