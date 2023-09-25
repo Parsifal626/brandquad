@@ -3,7 +3,8 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 import time
 import re
-from urllib.parse import urljoin, urlsplit, parse_qs
+
+
 
 t = time.time()
 local = time.localtime(t)
@@ -12,17 +13,17 @@ local = time.localtime(t)
 class PagesCrawlSpider(CrawlSpider):
     name = "pages_crawl"
     allowed_domains = ["maksavit.ru"]
-    start_urls = ["https://maksavit.ru/novosibirsk/catalog/materinstvo_i_detstvo/detskaya_gigiena/?page=1"]
+    start_urls = ["https://maksavit.ru/novosibirsk/catalog/materinstvo_i_detstvo/detskaya_gigiena/"]
 
 
 
     # download_delay = 2
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths='//div[@class="product-card-block"]/div[@class="product-top"]/a'), callback="parse_item", follow=True),
-    
-        Rule(LinkExtractor(allow=('/page/\d+/')))
-             )
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="product-card-block"]/div[@class="product-top"]/a'), callback="parse_item"),
+        Rule(LinkExtractor(restrict_xpaths=("//ul[@class='ui-pagination']/li/a")), callback='parse_next_page', follow=True)
+    )
+
 
     def parse_item(self, response):
         current_url = response.url
@@ -99,5 +100,13 @@ class PagesCrawlSpider(CrawlSpider):
         item['variants'] = 1
 
         yield item
+
+    def parse_next_page(self, response):
+        page_links = response.xpath('//ul[@class="ui-pagination"]/li/a/@href').extract()
+
+        for page_link in page_links:
+            yield scrapy.Request(response.urljoin(page_link), callback=self.parse_item)
+
+
 
 
