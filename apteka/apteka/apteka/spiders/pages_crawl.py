@@ -6,8 +6,8 @@ import re
 
 
 
-t = time.time()
-local = time.localtime(t)
+t = int(time.time())
+
 
 
 class PagesCrawlSpider(CrawlSpider):
@@ -21,22 +21,37 @@ class PagesCrawlSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(restrict_xpaths='//div[@class="product-card-block"]/div[@class="product-top"]/a'), callback="parse_item"),
-        Rule(LinkExtractor(restrict_xpaths=("//ul[@class='ui-pagination']/li/a")), callback='parse_next_page', follow=True)
+        # Rule(LinkExtractor(restrict_xpaths=("//ul[@class='ui-pagination']/li/a")), callback='parse_next_page', follow=True)
     )
 
 
     def parse_item(self, response):
         current_url = response.url
         item = {}
-        item['timestamp'] = time.asctime(local)
+        item['timestamp'] = t
         item['RPC'] = current_url.split('/')[-2]
 
-        item['url'] = []
-        item['url'].append(current_url)
+        item['url'] = str(current_url)
+        
 
         item['title'] = response.xpath("//h1[contains(@class, 'product-top__title')]/text()").get()
-        item['marketing_tags'] = response.xpath("//div[contains(@class, 'badge-discount badge-discount_price-reduced')]/text()").get()
-        item['brand'] = response.xpath("//div[@class='product-info__brand']/div/a[contains(@class, 'product-info__brand-value')]/text()").get()
+        marketing_tags = response.xpath("//div[contains(@class, 'badge-discount badge-discount_price-reduced')]/text()").get() 
+
+        if marketing_tags is None:
+            item['marketing_tags'] = []
+        else:
+            # Очищаем текст и разбиваем его на список, удаляя лишние пробелы и переносы строк
+            cleaned_tags = marketing_tags.strip()
+            if cleaned_tags:
+                item['marketing_tags'] = [cleaned_tags]
+            else:
+                item['marketing_tags'] = None
+
+
+    
+        brand = response.xpath("//div[@class='product-info__brand']/div/a[contains(@class, 'product-info__brand-value')]/text()").get()
+        if brand:
+            item['brand'] = brand.strip()
         
         
         breadcrumbs = response.xpath('//ul[@class="breadcrumbs"]//span/text()').getall()
@@ -50,10 +65,20 @@ class PagesCrawlSpider(CrawlSpider):
         original_price_element = response.xpath('//div[@class="price-box__old-price"]/text()').get()
         current_price_element = response.xpath('//span[@class="price-value"]/text()').get()
 
-        original_price_numbers = re.findall(r'\d+\.\d+|\d+', original_price_element) if original_price_element else []
-        current_price_numbers = re.findall(r'\d+\.\d+|\d+', current_price_element) if current_price_element else []
+        original_price_numbers = re.findall(r'\d+\.\d+|\d+', original_price_element) 
+        current_price_numbers = re.findall(r'\d+\.\d+|\d+', current_price_element)      
+        
+        if original_price_element == None:
+            original_price_element = current_price_numbers
+            item["price_data"]["original"] = float(original_price_numbers[0]) 
+        else:
+            item["price_data"]["original"] = float(original_price_numbers[0]) 
+        
+        
 
-        item["price_data"]["original"] = float(original_price_numbers[0]) if original_price_numbers else None
+    
+
+        
         item["price_data"]["current"] = float(current_price_numbers[0]) if current_price_numbers else None
 
         item["price_data"]["sale_tag"] = None
@@ -101,11 +126,11 @@ class PagesCrawlSpider(CrawlSpider):
 
         yield item
 
-    def parse_next_page(self, response):
-        # page_links = response.xpath('//ul[@class="ui-pagination"]/li/a/@href').extract()
+    # def parse_next_page(self, response):
+    #     # page_links = response.xpath('//ul[@class="ui-pagination"]/li/a/@href').extract()
 
-        for i in range(1,20):
-            yield scrapy.Request(response.urljoin(f'https://maksavit.ru/novosibirsk/catalog/materinstvo_i_detstvo/detskaya_gigiena/?page={i}'), callback=self.parse_item)
+    #     for i in range(1,2):
+    #         yield scrapy.Request(response.urljoin(f'https://maksavit.ru/novosibirsk/catalog/materinstvo_i_detstvo/detskaya_gigiena/?page={i}'), callback=self.parse_item)
 
 
 
