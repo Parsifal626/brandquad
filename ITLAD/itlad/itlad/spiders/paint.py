@@ -23,7 +23,8 @@ class PaintSpider(CrawlSpider):
             restrict_xpaths='//div[@class="sections-block-level-2"]'),
              callback="parse_category",
              
-             follow=True),
+             follow=False),
+             LinkExtractor(restrict_xpaths='//div/div[@class="horizontal-product-item-block_3_2"]/a/@href'), callback ="parse_item_links",
     )
     
     category_dict = {}
@@ -51,22 +52,18 @@ class PaintSpider(CrawlSpider):
                  
 
                 print(self.category_dict)
-            category_pattern = self.category_dict.get(category, [])
-            links = LinkExtractor(allow=category_pattern, unique=True).extract_links(response)
-            for product_link in links:
-                yield response.follow(product_link, callback=self.parse_item_links)
+
+            
                         
         for category, links in self.category_dict.items():
             for link in links:
                 if link not in self.visited_links:
-                    yield scrapy.Request(
-                        link, 
-                        callback= self.parse_item_links
-                    )
+                    yield response.follow(link, callback=self.parse_item_links)
                     self.visited_links.add(link)
 
     def parse_item_links(self, response):
         item_links = response.xpath('//div/div[@class="horizontal-product-item-block_3_2"]/a/@href').extract()
+        print(item_links)
         for item_link in item_links:
             yield response.follow(item_link, callback=self.parse_item)
 
