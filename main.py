@@ -15,26 +15,26 @@ else:
 
 
 
-# Создаем объект BeautifulSoup
-soup = BeautifulSoup(content, 'html.parser')
+# # Создаем объект BeautifulSoup
+# soup = BeautifulSoup(content, 'html.parser')
 
-# Находим таблицу с классом "table-character"
-table = soup.find('table', class_='table-character')
+# # Находим таблицу с классом "table-character"
+# table = soup.find('table', class_='table-character')
 
-# Создаем пустой словарь для хранения данных
-data = {}
+# # Создаем пустой словарь для хранения данных
+# data = {}
 
-# Итерируемся по строкам таблицы
-for row in table.find_all('tr'):
-    text = row.find('td', class_='table-character-text').text
-    value = row.find('td', class_='table-character-value').text
-    # Декодируем текст из UTF-8
-    text = text.encode('utf-8').decode('utf-8')
-    value = value.encode('utf-8').decode('utf-8')
-    data[text] = value
+# # Итерируемся по строкам таблицы
+# for row in table.find_all('tr'):
+#     text = row.find('td', class_='table-character-text').text
+#     value = row.find('td', class_='table-character-value').text
+#     # Декодируем текст из UTF-8
+#     text = text.encode('utf-8').decode('utf-8')
+#     value = value.encode('utf-8').decode('utf-8')
+#     data[text] = value
 
-# Преобразуем словарь в JSON
-json_data = json.dumps(data, ensure_ascii=False, indent=4)
+# # Преобразуем словарь в JSON
+# json_data = json.dumps(data, ensure_ascii=False, indent=4)
 
-# Выводим JSON-данные
-print(json_data)
+# # Выводим JSON-данные
+# print(json_data)

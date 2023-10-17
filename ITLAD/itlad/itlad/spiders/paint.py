@@ -7,7 +7,7 @@ import pdb
 class PaintSpider(CrawlSpider):
     name = "paint"
     allowed_domains = ["order-nn.ru"]
-    start_urls = ["https://order-nn.ru/kmo/catalog/"]
+    start_urls = ["http://order-nn.ru/kmo/catalog/"]
     desired_categories = ["Краски и материалы специального назначения", "Краски для наружных работ", "Лаки"]
     visited_links = set()
 
@@ -24,7 +24,8 @@ class PaintSpider(CrawlSpider):
              callback="parse_category",
              
              follow=False),
-             LinkExtractor(restrict_xpaths='//div/div[@class="horizontal-product-item-block_3_2"]/a/@href'), callback ="parse_item_links",
+            #  LinkExtractor(restrict_xpaths='//div/div[@class="horizontal-product-item-block_3_2"]/a/@href'),
+            #    callback ="parse_item_links",
     )
     
     category_dict = {}
