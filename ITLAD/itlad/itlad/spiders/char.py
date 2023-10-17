@@ -28,26 +28,31 @@ class CharacterSpider(scrapy.Spider):
             link = elements.xpath('@href').extract_first()
 
             if category not in category_dict:
-                category_dict[category] = []  # Initialize an empty list
+                category_dict[category] = []
 
             if link and link not in category_dict[category]:
                 self.log(f"Найдена ссылка на категорию '{category}': {link}")
-                category_dict[category].append(link)  # Append the link to the list
+                category_dict[category].append(link)
             else:
                 self.log(f"Ссылка на категорию '{category}' уже существует: {link}")
 
         for category, links in category_dict.items():
             for link in links:
-                yield response.follow(link, self.parse_item_links)
+                yield response.follow(link, self.parse_item_links, meta={'category': category})
 
     def parse_item_links(self, response):
         item_links = response.xpath('//div/div[@class="horizontal-product-item-block_3_2"]/a/@href').extract()
         for link in item_links:
-            yield response.follow(link, self.parse_item)
+            yield response.follow(link, self.parse_item, meta={'category': response.meta['category']})
+
+        # Extract and follow the pagination link from the current page
+        next_page = response.xpath('//ul[@class="ul-pagination"]/li/a[@rel="canonical"]/@href').extract()[-1]
+        if next_page:
+            yield response.follow(next_page, self.parse_item_links, meta={'category': response.meta['category']})
 
     def parse_item(self, response):
         item = {}
-
+        item['Категория'] = response.meta['category']
         item["наименование"] = response.xpath('//div[@class="block-1"]/div/h1/text()').get()
         item["цена"] = response.xpath('//div[@class="block-2-3"]/div/div/span/text()').get()
         description = response.xpath('//div[@id="block-description"]//text()').extract()
@@ -68,18 +73,14 @@ class CharacterSpider(scrapy.Spider):
 
             if text and value:
                 item["характеристики"][text] = value
-
+        self.log(f'Количество спарсенных ячеек: {len(item)}')
         yield item
-
-        # Collect the items in a list
-        self.items.append(item)
 
     def __init__(self, *args, **kwargs):
         super(CharacterSpider, self).__init__(*args, **kwargs)
         self.items = []
 
     def closed(self, reason):
-        # Convert the list of items to a Pandas DataFrame
         df = pd.DataFrame(self.items)
 
         # Save the DataFrame to a CSV file

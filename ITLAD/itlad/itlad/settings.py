@@ -93,3 +93,7 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 FEED_FORMAT = 'csv'
 FEED_URI = 'output.csv'
+
+# ITEM_PIPELINES = {
+#     'char.pipelines.MyPipeline': 300,
+# }
